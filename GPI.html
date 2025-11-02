@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>政府采购指数GPI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#0F3FA8',
+            success: '#36D399',
+            danger: '#F87272',
+            neutral: '#64748B',
+            'neutral-light': '#F1F5F9',
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+      .transition-custom {
+        transition: all 0.3s ease-in-out;
+      }
+      .artistic-text {
+        font-family: 'Times New Roman Roman', serif;
+        font-style: italic;
+        font-weight: bold;
+        font-size: 1.2rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.5px;
+        position: relative;
+        display: inline-block;
+      }
+      .artistic-text::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #ffffff, transparent);
+        transform: scaleX(0.8);
+      }
+      .artistic-text-footer {
+        font-family: 'Times New Roman', serif;
+        font-style: italic;
+        font-weight: bold;
+        font-size: 1rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        letter-spacing: 0.3px;
+        position: relative;
+        display: inline-block;
+        color: #ffffff;
+      }
+      .artistic-text-footer::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 100%;
+        height: 1.5px;
+        background: linear-gradient(90deg, transparent, #ffffff, transparent);
+        transform: scaleX(0.7);
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen">
+  <!-- 顶部导航 -->
+  <header class="bg-primary text-white shadow shadow-md">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <!-- 添加公司logo -->
+        <img src="https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/b018f77ed8c64fd1803e934b2be675b0.png~tplv-a9rns2rl98-24:720:720.png?rcl=2025103115190009A229659FB77082AF8E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762499941&x-signature=iZ8IvK3ZmUd8TMnigL18ktAB8QE%3D" alt="广咨国际" class="h-10">
+        <div class="flex items-center space-x-2">
+          <i class="fa fa-bar-chart text-2xl"></i>
+          <h1 class="text-xl md:text-2xl font-bold">政府采购指数GPI</h1>
+        </div>
+      </div>
+      <nav>
+        <ul class="flex space-x-10">
+          <li><a href="#questionnaire" class="hover:text-gray-200 transition-custom artistic-text">广博智慧</a></li>
+          <li><a href="#statistics" class="hover:text-gray-200 transition-custom artistic-text">咨谋社会</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <!-- 介绍部分 -->
+    <section class="mb-12 bg-white rounded-lg p-6 shadow-md">
+      <h2 class="text-2xl font-bold text-primary mb-4">关于政府采购指数GPI</h2>
+      <p class="text-gray-700 mb-4">
+        政府采购指数GPI是通过对政府采购相关指标的调查统计，计算得出的反映政府采购市场活跃度和趋势的综合指数。
+      </p>
+      <!-- 移除计算公式部分 -->
+    </section>
+
+    <!-- 问卷部分 -->
+    <section id="questionnaire" class="mb-16 bg-white rounded-lg p-6 shadow-md">
+      <h2 class="text-2xl font-bold text-primary mb-6 flex items-center">
+        <i class="fa fa-list-alt mr-2"></i>调查问卷
+      </h2>
+      
+      <form id="surveyForm" class="space-y-6">
+        <!-- 问题将通过JS动态生成 -->
+      </form>
+      
+      <div class="mt-8 text-center">
+        <button id="submitBtn" class="bg-primary hover:bg-secondary text-white font-bold py-3 px-8 rounded-lg transition-custom shadow-md hover:shadow-lg">
+          提交问卷 <i class="fa fa-paper-plane ml-1"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 统计结果部分 -->
+    <section id="statistics" class="mb-16 bg-white rounded-lg p-6 shadow-md hidden">
+      <h2 class="text-2xl font-bold text-primary mb-6 flex items-center">
+        <i class="fa fa-pie-chart mr-2"></i>统计结果（已收集4份问卷）
+      </h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- 选项比例图表 -->
+        <div class="card-shadow rounded-lg p-4">
+          <h3 class="text-lg font-semibold mb-4">各问题选项比例</h3>
+          <div class="mb-4 flex overflow-x-auto pb-2 space-x-4">
+            <button class="chart-filter active px-4 py-2 bg-primary text-white rounded-full text-sm" data-question="0">问题1</button>
+          </div>
+          <div class="h-80">
+            <canvas id="proportionChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- 扩散系数K图表 -->
+        <div class="card-shadow rounded-lg p-4">
+          <h3 class="text-lg font-semibold mb-4">各问题扩散系数K值</h3>
+          <div class="h-80">
+            <canvas id="kValueChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 最终结果部分 -->
+    <section id="result" class="mb-16 bg-white rounded-lg p-6 shadow-md hidden">
+      <h2 class="text-2xl font-bold text-primary mb-6 flex items-center">
+        <i class="fa fa-line-chart mr-2"></i>政府采购指数GPI结果
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- PMI数值卡片 -->
+        <div class="md:col-span-1 flex items-center justify-center">
+          <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-green-600 to-green-800 text-white shadow-lg w-full">
+            <h3 class="text-xl mb-2">政府采购指数GPI</h3>
+            <div id="pmiValue" class="text-5xl font-bold mb-4">0.00</div>
+            <div id="pmiInterpretation" class="bg-white/20 p-3 rounded-lg">
+              请完成问卷以获取结果
+            </div>
+          </div>
+        </div>
+        
+        <!-- PMI构成图表 -->
+        <div class="md:col-span-2 card-shadow rounded-lg p-4">
+          <h3 class="text-lg font-semibold mb-4 text-green-700">GPI构成分析</h3>
+          <div class="h-80">
+            <canvas id="pmiCompositionChart"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 添加指标权重表 -->
+      <div class="mt-8 overflow-x-auto hidden">
+        <table class="min-w-full bg-white rounded-lg overflow-hidden">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="py-3 px-4 text-left">指标名称</th>
+              <th class="py-3 px-4 text-left">权重</th>
+              <th class="py-3 px-4 text-left">扩散系数K</th>
+              <th class="py-3 px-4 text-left">对GPI贡献值</th>
+            </tr>
+          </thead>
+          <tbody id="weightTableBody">
+            <!-- 权重表格内容将通过JS动态生成 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-gray-800 text-white py-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <div class="flex items-center space-x-2">
+            <i class="fa fa-bar-chart text-xl"></i>
+            <span class="font-bold">政府采购指数GPI</span>
+          </div>
+          <p class="text-gray-400 text-sm mt-2">专业的政府采购市场分析工具</p>
+        </div>
+        <div class="text-gray-400 text-sm">
+          2025 政府采购指数GPI版权所属<span class="artistic-text-footer">采购咨询研究中心</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 问卷数据
+    const questions = [
+      { id: 1, text: "本月新增项目数量？（立项）", weight: 0.1379, weightName: "新增招标代理代理委托量" },
+      { id: 2, text: "本月项目预算总额？（立项）", weight: 0.1161, weightName: "招标项目预算总额" },
+      { id: 3, text: "本月主要领域政府采购项目数量占比？（立项）", weight: 0.0508, weightName: "招标项目类型分布" },
+      { id: 4, text: "本月项目平均执行周期？（立项到中标通知书，以当月发布中标通知书反推）", weight: 0.0889, weightName: "项目平均执行周期" },
+      { id: 5, text: "本月项目流标/废标率？", weight: 0.1270, weightName: "流标/废标率" },
+      { id: 6, text: "本月项目电子化占比？", weight: 0.0508, weightName: "电子化招标占比" },
+      { id: 7, text: "本月项目代理服务费收入增长率？", weight: 0.0694, weightName: "代理服务费收入变化率" },
+      { id: 8, text: "本月中标金额规模？", weight: 0.0578, weightName: "中标金额规模" },
+      { id: 9, text: "本月代理服务费占中标金额的比例变化？", weight: 0.0347, weightName: "费率波动" },
+      { id: 10, text: "本月项目平均投标人数？", weight: 0.0732, weightName: "有效投标人数量/项目" },
+      { id: 11, text: "本月项目中小企业成功中标比例？", weight: 0.0431, weightName: "中小企业中标率" },
+      { id: 12, text: "本月新增招标代理代理企业数？", weight: 0.0646, weightName: "新进入机构数量" },
+      { id: 13, text: "本月专职人员数量变动？", weight: 0.0306, weightName: "从业人员指数" },
+      { id: 14, text: "对未来1个月订单预期？（数量）", weight: 0.0245, weightName: "未来6个月订单预期" },
+      { id: 15, text: "新政新策（评定分离、优化营商环境）对业务影响？", weight: 0.0306, weightName: "政策影响评估" }
+    ];
+    
+    const options = [
+      { value: 'A', text: '与上个月相同', color: '#64748B' },
+      { value: 'B', text: '比上个月高', color: '#36D399' },
+      { value: 'C', text: '比上个月低', color: '#F87272' }
+    ];
+    
+    // 预设4份模拟问卷数据（15个问题×4人）
+    const presetSurveyData = [
+      // 第1人回答
+      ['B', 'B', 'A', 'C', 'A', 'B', 'B', 'B', 'A', 'B', 'B', 'A', 'A', 'B', 'B'],
+      // 第2人回答
+      ['B', 'A', 'B', 'C', 'C', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'A', 'B', 'B'],
+      // 第3人回答
+      ['A', 'B', 'A', 'A', 'A', 'B', 'B', 'A', 'C', 'B', 'A', 'B', 'A', 'A', 'A'],
+      // 第4人回答
+      ['B', 'B', 'B', 'C', 'A', 'A', 'B', 'B', 'A', 'B', 'B', 'A', 'B', 'B', 'B']
+    ];
+    
+    // 存储问卷数据（优先使用本地存储，若无则使用预设数据）
+    let surveyData = JSON.parse(localStorage.getItem('surveyData')) || presetSurveyData;
+    
+    // DOM元素
+    const surveyForm = document.getElementById('surveyForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statisticsSection = document.getElementById('statistics');
+    const resultSection = document.getElementById('result');
+    const chartFilterContainer = document.querySelector('.chart-filter').parentElement;
+    const weightTableBody = document.getElementById('weightTableBody');
+    const pmiValue = document.getElementById('pmiValue');
+    const pmiInterpretation = document.getElementById('pmiInterpretation');
+    
+    // 初始化问卷表单
+    function initSurveyForm() {
+      questions.forEach((question, index) => {
+        // 创建问题容器
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'p-4 border border-gray-200 rounded-lg hover:shadow-md transition-custom';
+        questionDiv.dataset.questionIndex = index;
+        
+        // 问题标题
+        const questionTitle = document.createElement('h3');
+        questionTitle.className = 'text-lg font-medium mb-4';
+        questionTitle.innerHTML = `<span class="text-primary font-bold">Q${question.id}.</span> ${question.text}`;
+        questionDiv.appendChild(questionTitle);
+        
+        // 选项容器
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+        
+        // 添加选项
+        options.forEach(option => {
+          const optionDiv = document.createElement('div');
+          optionDiv.className = 'flex items-center p-3 border border-gray-200 rounded-md hover:border-primary cursor-pointer transition-custom';
+          
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = `question${index}`;
+          input.value = option.value;
+          input.id = `q${index}${option.value}`;
+          input.className = 'mr-3 h-4 w-4 text-primary focus:ring-primary';
+          
+          const label = document.createElement('label');
+          label.htmlFor = `q${index}${option.value}`;
+          label.className = 'cursor-pointer';
+          label.textContent = option.text;
+          
+          optionDiv.appendChild(input);
+          optionDiv.appendChild(label);
+          optionsDiv.appendChild(optionDiv);
+          
+          // 点击选项时高亮
+          optionDiv.addEventListener('click', () => {
+            input.checked = true;
+            // 清除同组其他选项的高亮
+            document.querySelectorAll(`input[name="question${index}"]`).forEach(radio => {
+              radio.parentElement.classList.remove('border-primary', 'bg-primary/5');
+            });
+            // 添加当前选项的高亮
+            optionDiv.classList.add('border-primary', 'bg-primary/5');
+          });
+        });
+        
+        questionDiv.appendChild(optionsDiv);
+        surveyForm.appendChild(questionDiv);
+        
+        // 添加图表过滤器按钮
+        if (index > 0) {
+          const filterBtn = document.createElement('button');
+          filterBtn.className = 'chart-filter px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-full text-sm transition-custom';
+          filterBtn.dataset.question = index;
+          filterBtn.textContent = `问题${index + 1}`;
+          chartFilterContainer.appendChild(filterBtn);
+        }
+      });
+      
+      // 添加图表过滤器事件
+      document.querySelectorAll('.chart-filter').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // 更新活跃状态
+          document.querySelectorAll('.chart-filter').forEach(b => {
+            b.classList.remove('active', 'bg-primary', 'text-white');
+            b.classList.add('bg-gray-200', 'hover:bg-gray-300');
+          });
+          btn.classList.add('active', 'bg-primary', 'text-white');
+          btn.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+          
+          // 更新图表
+          updateProportionChart(parseInt(btn.dataset.question));
+        });
+      });
+    }
+    
+    // 提交问卷
+    submitBtn.addEventListener('click', () => {
+      const formData = new FormData(surveyForm);
+      const responses = [];
+      let isValid = true;
+      
+      // 验证并收集回答
+      questions.forEach((_, index) => {
+        const answer = formData.get(`question${index}`);
+        if (!answer) {
+          isValid = false;
+          // 高亮未回答的问题
+          const questionDiv = document.querySelector(`[data-question-index="${index}"]`);
+          questionDiv.classList.add('border-danger', 'bg-danger/5');
+          setTimeout(() => {
+            questionDiv.classList.remove('border-danger', 'bg-danger/5');
+          }, 2000);
+        } else {
+          responses.push(answer);
+        }
+      });
+      
+      if (!isValid) {
+        alert('请完成所有问题后再提交');
+        return;
+      }
+      
+      // 保存回答（追加到现有数据中）
+      surveyData.push(responses);
+      localStorage.setItem('surveyData', JSON.stringify(surveyData));
+      
+      // 重置表单
+      surveyForm.reset();
+      
+      // 显示结果部分
+      statisticsSection.classList.remove('hidden');
+      resultSection.classList.remove('hidden');
+      
+      // 更新统计图表标题（显示最新数量）
+      document.querySelector('#statistics h2').textContent = `统计结果（已收集${surveyData.length}份问卷）`;
+      document.querySelector('#result h2').textContent = `政府采购指数GPI结果`;
+      
+      // 滚动到统计部分
+      statisticsSection.scrollIntoView({ behavior: 'smooth' });
+      
+      // 更新统计图表
+      updateStatistics();
+    });
+    
+    // 计算选项比例
+    function calculateProportions() {
+      const proportions = questions.map(() => ({ A: 0, B: 0, C: 0 }));
+      
+      if (surveyData.length === 0) return proportions;
+      
+      surveyData.forEach(responses => {
+        responses.forEach((answer, index) => {
+          proportions[index][answer]++;
+        });
+      });
+      
+      // 转换为百分比
+      return proportions.map(question => {
+        const total = surveyData.length;
+        return {
+          A: (question.A / total) * 100,
+          B: (question.B / total) * 100,
+          C: (question.C / total) * 100
+        };
+      });
+    }
+    
+    // 计算扩散系数K
+    function calculateKValues(proportions) {
+      return proportions.map(question => {
+        return question.B + (question.C / 2);
+      });
+    }
+    
+    // 计算GPI
+    function calculatePMI(kValues) {
+      let pmi = 0;
+      kValues.forEach((k, index) => {
+        pmi += k * questions[index].weight;
+      });
+      return pmi;
+    }
+    
+    // 更新权重表格
+    function updateWeightTable(kValues) {
+      weightTableBody.innerHTML = '';
+      
+      questions.forEach((question, index) => {
+        const k = kValues[index];
+        const contribution = k * question.weight;
+        
+        const row = document.createElement('tr');
+        row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+        
+        row.innerHTML = `
+          <td class="py-3 px-4 border-b">${question.weightName}</td>
+          <td class="py-3 px-4 border-b">${(question.weight * 100).toFixed(2)}%</td>
+          <td class="py-3 px-4 border-b">${k.toFixed(2)}</td>
+          <td class="py-3 px-4 border-b">${contribution.toFixed(2)}</td>
+        `;
+        
+        weightTableBody.appendChild(row);
+      });
+    }
+    
+    // 更新所有统计图表
+    function updateStatistics() {
+      const proportions = calculateProportions();
+      const kValues = calculateKValues(proportions);
+      const pmi = calculatePMI(kValues);
+      
+      // 更新比例图表（默认显示第一个问题）
+      updateProportionChart(0);
+      
+      // 更新K值图表
+      updateKValueChart(kValues);
+      
+      // 更新GPI图表
+      updatePMIChart(kValues);
+      
+      // 更新权重表格
+      updateWeightTable(kValues);
+      
+      // 更新GPI数值和解释
+      updatePMIValue(pmi);
+    }
+    
+    // 比例图表
+    let proportionChart;
+    function updateProportionChart(questionIndex) {
+      const ctx = document.getElementById('proportionChart').getContext('2d');
+      const proportions = calculateProportions()[questionIndex];
+      
+      const labels = options.map(opt => opt.text);
+      const data = options.map(opt => proportions[opt.value]);
+      const colors = options.map(opt => opt.color);
+      
+      if (proportionChart) {
+        proportionChart.data.labels = labels;
+        proportionChart.data.datasets[0].data = data;
+        proportionChart.data.datasets[0].backgroundColor = colors;
+        proportionChart.options.plugins.title.text = `问题${questionIndex + 1}：${questions[questionIndex].text}`;
+        proportionChart.update();
+      } else {
+        proportionChart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: colors,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: true,
+                text: `问题${questionIndex + 1}：${questions[questionIndex].text}`,
+                font: {
+                  size: 14
+                }
+              },
+              legend: {
+                position: 'bottom'
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.label}: ${context.raw.toFixed(1)}%`;
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+    }
+    
+    // K值图表
+    let kValueChart;
+    function updateKValueChart(kValues) {
+      const ctx = document.getElementById('kValueChart').getContext('2d');
+      const labels = questions.map((q, i) => `问题${i + 1}`);
+      
+      if (kValueChart) {
+        kValueChart.data.datasets[0].data = kValues;
+        kValueChart.update();
+      } else {
+        kValueChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '扩散系数K值',
+              data: kValues,
+              backgroundColor: 'rgba(22, 93, 255, 0.7)',
+              borderColor: 'rgba(22, 93, 255, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: 'K值'
+                }
+              }
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const index = context.dataIndex;
+                    return `K值: ${context.raw.toFixed(2)} (问题${index + 1})`;
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+    }
+    
+    // GPI构成图表
+    let pmiCompositionChart;
+    function updatePMIChart(kValues) {
+      const ctx = document.getElementById('pmiCompositionChart').getContext('2d');
+      const contributions = kValues.map((k, index) => k * questions[index].weight);
+      const labels = questions.map(q => q.weightName);
+      
+      // 绿色系颜色渐变
+      const colors = contributions.map((_, i) => {
+        const hue = (120 + i * 15) % 180; // 绿色系色调范围
+        return `hsla(${hue}, 70%, 50%, 0.7)`;
+      });
+      
+      if (pmiCompositionChart) {
+        pmiCompositionChart.data.datasets[0].data = contributions;
+        pmiCompositionChart.update();
+      } else {
+        pmiCompositionChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '对GPI的贡献值',
+              data: contributions,
+              backgroundColor: colors,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: '贡献值'
+                }
+              }
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const index = context.dataIndex;
+                    return `贡献值: ${context.raw.toFixed(2)} (权重: ${(questions[index].weight * 100).toFixed(1)}%)`;
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+    }
+    
+    // 更新GPI数值和解释
+    function updatePMIValue(pmi) {
+      pmiValue.textContent = pmi.toFixed(2);
+      
+      // 添加数值动画
+      pmiValue.classList.add('animate-pulse');
+      setTimeout(() => {
+        pmiValue.classList.remove('animate-pulse');
+      }, 1000);
+      
+      // 根据GPI值给出解释
+      let interpretation = '';
+      let bgClass = '';
+      
+      if (pmi > 60) {
+        interpretation = 'GPI指数高于60，表明政府采购市场活跃度高，整体呈明显扩张趋势，市场信心充足。';
+        bgClass = 'bg-success/20';
+      } else if (pmi > 50) {
+        interpretation = 'GPI指数在50-60之间，表明政府采购市场处于扩张状态，市场景气度良好。';
+        bgClass = 'bg-success/10';
+      } else if (pmi > 40) {
+        interpretation = 'GPI指数在40-50之间，表明政府采购市场增速放缓，整体趋于稳定。';
+        bgClass = 'bg-neutral/20';
+      } else {
+        interpretation = 'GPI指数低于40，表明政府采购市场活跃度较低，整体呈收缩趋势，市场信心不足。';
+        bgClass = 'bg-danger/20';
+      }
+      
+      pmiInterpretation.textContent = interpretation;
+      pmiInterpretation.className = `${bgClass} p-3 rounded-lg`;
+    }
+    
+    // 初始化页面
+    document.addEventListener('DOMContentLoaded', () => {
+      initSurveyForm();
+      
+      // 保存预设数据到本地存储（如果是首次加载）
+      if (!localStorage.getItem('surveyData')) {
+        localStorage.setItem('surveyData', JSON.stringify(presetSurveyData));
+      }
+      
+      // 显示统计结果（已有4份数据）
+      statisticsSection.classList.remove('hidden');
+      resultSection.classList.remove('hidden');
+      updateStatistics();
+      
+      // 平滑滚动
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>
